@@ -38,6 +38,11 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.Player;
 
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.games.leaderboard.LeaderboardVariant;
+import com.google.android.gms.games.leaderboard.LeaderboardScore;
+import com.google.android.gms.games.leaderboard.Leaderboards.LoadPlayerScoreResult;
+
 public class GooglePlayGame extends CordovaPlugin implements GameHelperListener {
 
     private static final String LOGTAG = "a42-CordovaGooglePlayGame";
@@ -54,6 +59,8 @@ public class GooglePlayGame extends CordovaPlugin implements GameHelperListener 
     private static final String ACTION_INCREMENT_ACHIEVEMENT = "incrementAchievement";
     private static final String ACTION_SHOW_ACHIEVEMENTS = "showAchievements";
     private static final String ACTION_SHOW_PLAYER = "showPlayer";
+
+    private static final String ACTION_GET_PLAYER_LEADERBOARD_SCORE = "getPlayerLeaderboardScore";
 
     private static final int ACTIVITY_CODE_SHOW_LEADERBOARD = 0;
     private static final int ACTIVITY_CODE_SHOW_ACHIEVEMENTS = 1;
@@ -125,6 +132,8 @@ public class GooglePlayGame extends CordovaPlugin implements GameHelperListener 
             executeIncrementAchievement(options, callbackContext);
         } else if (ACTION_SHOW_PLAYER.equals(action)) {
             executeShowPlayer(callbackContext);
+        } else if( ACTION_GET_PLAYER_LEADERBOARD_SCORE.equals(action)) {
+            executeGetPlayerLeaderboardScore(options, callbackContext);
         } else {
             return false; // Tried to execute an unknown method
         }
@@ -174,7 +183,7 @@ public class GooglePlayGame extends CordovaPlugin implements GameHelperListener 
             }
         });
     }
-    
+
     private void executeSubmitScore(final JSONObject options, final CallbackContext callbackContext) throws JSONException {
         Log.d(LOGTAG, "executeSubmitScore");
 
@@ -330,6 +339,54 @@ public class GooglePlayGame extends CordovaPlugin implements GameHelperListener 
                 }
             }
         });
+    }
+
+    private void executeGetPlayerLeaderboardScore(final JSONObject options, final CallbackContext callbackContext){
+
+      cordova.getActivity().runOnUiThread(new Runnable() {
+          @Override
+          public void run() {
+
+            if (gameHelper.isSignedIn()) {
+
+              String leaderboardId = options.optString("leaderboardId");
+
+              Games.Leaderboards.loadCurrentPlayerLeaderboardScore(gameHelper.getApiClient(),
+              leaderboardId,
+              LeaderboardVariant.TIME_SPAN_ALL_TIME,
+              LeaderboardVariant.COLLECTION_SOCIAL)
+              .setResultCallback(new ResultCallback<LoadPlayerScoreResult>() {
+
+                @Override
+                public void onResult(LoadPlayerScoreResult arg0) {
+
+                  LeaderboardScore c = arg0.getScore();
+                  long score = 0;
+
+                  if(c != null){
+                    score = c.getRawScore();
+                  }
+
+
+                  try {
+                    JSONObject scoreInfo = new JSONObject();
+                    scoreInfo.put("playerScore",score);
+                    callbackContext.success(scoreInfo);
+                  }
+                  catch(Exception e){
+                    Log.w(LOGTAG, "executeGetPlayerLeaderboardScore: Error providing player social leaderboard score.", e);
+                    callbackContext.error("executeGetPlayerLeaderboardScore: Error providing player social leaderboard score.");                      }
+                  }
+              });
+
+            }
+            else {
+              Log.w(LOGTAG, "executeGetPlayerLeaderboardScore: not yet signed in");
+              callbackContext.error("executeGetPlayerLeaderboardScore: not yet signed in");
+            }
+
+        }
+      });
     }
 
 

@@ -36,9 +36,9 @@
         
         <!-- <dependency id="com.google.playservices" /> -->
         <!-- <dependency id="android.support.v4" /> -->
-        <!-- <dependency id="cordova-plugin-googleplayservices"/> -->
+        <dependency id="cordova-plugin-googleplayservices"/>
         <!-- <dependency id="cordova-android-support-v4"/> -->
-        <framework src="com.google.android.gms:play-services-games:9.2.0" />
+        <!-- <framework src="com.google.android.gms:play-services-games:9.2.0" /> -->
         
         <source-file src="src/com/a42/cordova/plugins/GooglePlayGame.java" target-dir="src/com/a42/cordova/plugins/" />
         <source-file src="src/com/a42/cordova/plugins/GoogleGameService.java" target-dir="src/com/a42/cordova/plugins/" />
